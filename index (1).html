@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SME & BA Workbench · Excelra</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f8f9fd;
+  --border:#dde2ef;--border2:#c8d0e7;
+  --blue:#6baed6;--blue-light:#a8cce4;--blue-deep:#3a7bbf;
+  --pink:#d4a5bf;--pink-light:#e8c8d8;--pink-deep:#b87fa0;
+  --lilac:#c4b8d8;--teal:#7ab8c4;
+  --text:#1e2535;--text2:#4a5270;--muted:#8a92aa;
+  --grad-hero:linear-gradient(135deg,#e8f0f8 0%,#f0e8f0 40%,#f8f0f4 70%,#eef4f8 100%);
+  --grad-sb:linear-gradient(180deg,#f0f5fc 0%,#f5eff8 100%);
+  --shadow:0 2px 12px rgba(58,100,180,.08);
+  --shadow-lg:0 8px 32px rgba(58,100,180,.14);
+  --mono:'DM Sans',sans-serif;--serif:'DM Serif Display',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);background-image:var(--grad-hero);background-attachment:fixed;color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 80% 10%,rgba(107,174,214,.22) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 60% at 10% 80%,rgba(212,165,191,.18) 0%,transparent 55%),
+  radial-gradient(ellipse 40% 50% at 50% 50%,rgba(196,184,216,.1) 0%,transparent 60%);}
+body::after{content:'';position:fixed;left:-40px;top:0;width:280px;height:100vh;pointer-events:none;z-index:0;opacity:.18;
+  background-image:repeating-linear-gradient(90deg,transparent 0px,transparent 18px,rgba(107,174,214,.6) 18px,rgba(107,174,214,.6) 19px);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.4) 40%,transparent 100%);transform:skewX(-8deg);}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--grad-sb);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;box-shadow:2px 0 20px rgba(58,100,180,.06);}
+.logo{padding:20px 22px 16px;border-bottom:1px solid var(--border);}
+.logo-brand{font-size:15px;font-weight:600;color:var(--text2);letter-spacing:-.2px;}
+.logo-brand span{font-weight:300;color:var(--muted);}
+.logo-tag{font-size:9.5px;color:var(--blue-deep);margin-top:2px;letter-spacing:1.6px;text-transform:uppercase;font-weight:600;}
+.logo-line{height:2px;border-radius:2px;margin-top:10px;background:linear-gradient(90deg,var(--blue),var(--pink),var(--lilac));}
+.nav{padding:10px 0;flex:1;overflow-y:auto;}
+.nav-sec{padding:10px 22px 3px;font-size:8.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 22px;cursor:pointer;font-size:12.5px;color:var(--text2);border-left:2px solid transparent;transition:all .17s;font-weight:400;}
+.nav-item:hover{color:var(--blue-deep);background:rgba(107,174,214,.08);}
+.nav-item.active{color:var(--blue-deep);border-left-color:var(--blue-deep);background:rgba(58,123,191,.08);font-weight:600;}
+.nav-icon{font-size:14px;width:20px;text-align:center;}
+.sb-footer{padding:13px 22px;border-top:1px solid var(--border);}
+.sb-label{font-size:10px;color:var(--muted);}
+.sb-bar{height:3px;background:var(--border);border-radius:2px;margin-top:5px;}
+.sb-fill{height:100%;border-radius:2px;width:0%;transition:width .5s;background:linear-gradient(90deg,var(--blue),var(--pink));}
+
+/* MAIN */
+.main{margin-left:232px;min-height:100vh;position:relative;z-index:1;}
+.topbar{padding:15px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.82);backdrop-filter:blur(16px);position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:var(--serif);font-size:21px;color:var(--text);}
+.topbar-title span{color:var(--blue-deep);}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.content{padding:26px 36px;}
+.panel{display:none;}
+.panel.active{display:block;animation:fadeUp .22s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:all .17s;font-weight:500;box-shadow:var(--shadow);}
+.btn:hover{border-color:var(--blue);color:var(--blue-deep);}
+.btn-primary{background:linear-gradient(135deg,var(--blue-deep),var(--blue));color:#fff;border-color:transparent;font-weight:600;}
+.btn-primary:hover{opacity:.9;color:#fff;}
+.btn-ai{background:linear-gradient(135deg,var(--pink-deep),var(--lilac));color:#fff;border-color:transparent;font-weight:600;}
+.btn-ai:hover{opacity:.88;color:#fff;}
+.btn-teal{background:linear-gradient(135deg,#3a8090,var(--teal));color:#fff;border-color:transparent;font-weight:600;}
+.btn-teal:hover{opacity:.9;color:#fff;}
+.btn-danger{border-color:var(--pink-deep);color:var(--pink-deep);background:transparent;box-shadow:none;}
+.btn-danger:hover{background:rgba(184,127,160,.1);}
+.btn-green{background:linear-gradient(135deg,#2a8a6a,#4ab890);color:#fff;border-color:transparent;font-weight:600;}
+.btn-green:hover{opacity:.9;color:#fff;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+/* CARDS */
+.card{background:rgba(255,255,255,.88);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:var(--shadow);backdrop-filter:blur(8px);}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.stripe{width:3px;height:17px;border-radius:2px;margin-right:10px;display:inline-block;vertical-align:middle;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* STATS */
+.stat-card{background:rgba(255,255,255,.88);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.s-blue::before{background:linear-gradient(90deg,var(--blue-deep),var(--blue-light));}
+.stat-card.s-pink::before{background:linear-gradient(90deg,var(--pink-deep),var(--pink-light));}
+.stat-card.s-lilac::before{background:linear-gradient(90deg,var(--lilac),var(--blue-light));}
+.stat-card.s-teal::before{background:linear-gradient(90deg,var(--teal),var(--blue));}
+.stat-num{font-family:var(--serif);font-size:38px;line-height:1;}
+.c-blue{color:var(--blue-deep);} .c-pink{color:var(--pink-deep);} .c-lilac{color:#7a6a9a;} .c-teal{color:#3a8090;}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:5px;}
+
+/* FORMS */
+input,textarea,select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 13px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(107,174,214,.15);}
+textarea{resize:vertical;min-height:80px;line-height:1.6;}
+label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px;font-weight:600;}
+.fr{margin-bottom:13px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:9px 13px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600;}
+td{padding:10px 13px;border-bottom:1px solid rgba(221,226,239,.5);vertical-align:top;}
+tr:hover td{background:rgba(107,174,214,.04);}
+tr:last-child td{border-bottom:none;}
+
+/* TAGS */
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.t-blue{background:rgba(107,174,214,.15);color:var(--blue-deep);}
+.t-pink{background:rgba(184,127,160,.15);color:var(--pink-deep);}
+.t-lilac{background:rgba(196,184,216,.2);color:#7a6a9a;}
+.t-teal{background:rgba(122,184,196,.15);color:#3a7f90;}
+.t-gray{background:rgba(138,146,170,.15);color:var(--muted);}
+.t-green{background:rgba(80,180,140,.15);color:#2a8a6a;}
+.t-red{background:rgba(200,90,100,.15);color:#b04050;}
+.t-orange{background:rgba(230,160,80,.15);color:#a06020;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab{padding:8px 16px;font-size:12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;font-weight:500;}
+.tab:hover{color:var(--blue-deep);}
+.tab.active{color:var(--blue-deep);border-bottom-color:var(--blue-deep);}
+
+/* CALL CARD */
+.item-card{background:rgba(255,255,255,.72);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:9px;cursor:pointer;transition:all .17s;}
+.item-card:hover{border-color:var(--blue);box-shadow:var(--shadow);transform:translateY(-1px);}
+
+/* RAID */
+.raid-item{background:rgba(255,255,255,.6);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:0 10px 10px 0;padding:13px 15px;margin-bottom:9px;}
+.raid-item.risk{border-left-color:#c04050;} .raid-item.assumption{border-left-color:var(--teal);} .raid-item.issue{border-left-color:var(--blue);} .raid-item.dependency{border-left-color:var(--pink-deep);}
+
+/* GLOSSARY */
+.gl-item{padding:13px 0;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;}
+.gl-item:last-child{border-bottom:none;}
+.gl-term{font-weight:600;color:var(--blue-deep);font-size:13.5px;min-width:150px;}
+.gl-def{color:var(--text2);font-size:12.5px;line-height:1.65;flex:1;}
+
+/* SEARCH */
+.sw{position:relative;} .sw input{padding-left:34px;} .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(30,37,53,.42);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:18px;padding:30px;width:100%;max-width:620px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:fadeUp .2s ease;}
+.modal-title{font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:20px;}
+.modal-title span{color:var(--blue-deep);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--muted);}
+.empty-icon{font-size:38px;margin-bottom:12px;opacity:.5;}
+.empty-text{font-size:13px;}
+
+/* CHECKLIST */
+.cl-item{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(221,226,239,.5);}
+.cl-item:last-child{border-bottom:none;}
+.cl-item input[type=checkbox]{width:auto;margin-top:3px;cursor:pointer;accent-color:var(--blue-deep);transform:scale(1.2);}
+.cl-lbl{font-size:13px;flex:1;line-height:1.5;color:var(--text2);}
+.cl-lbl.done{text-decoration:line-through;color:var(--muted);}
+.progress{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s;background:linear-gradient(90deg,var(--blue-deep),var(--pink));}
+
+/* Q ANSWER BOX */
+.ans-box{margin-top:10px;padding:12px;background:rgba(107,174,214,.07);border-radius:9px;border-left:2px solid var(--blue);}
+.ans-box p{font-size:12.5px;color:var(--blue-deep);line-height:1.6;}
+
+/* AI PANEL */
+.ai-panel{background:linear-gradient(135deg,rgba(107,174,214,.07),rgba(212,165,191,.07));border:1px solid rgba(107,174,214,.25);border-radius:14px;padding:20px;margin-top:14px;}
+.ai-panel-title{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue-deep);font-weight:700;margin-bottom:14px;}
+.ai-sec{margin-bottom:16px;}
+.ai-sec-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--pink-deep);font-weight:700;margin-bottom:7px;}
+.ai-sec p,.ai-sec li{font-size:12.5px;color:var(--text2);line-height:1.65;}
+.ai-sec ul{padding-left:17px;}
+.ai-sec li{margin-bottom:4px;}
+.ai-loading{display:flex;align-items:center;gap:12px;padding:18px;color:var(--blue-deep);font-size:13px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--blue-deep);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STEP */
+.step-card{background:rgba(255,255,255,.7);border:1px solid var(--border);border-radius:10px;padding:15px;flex:0 0 155px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--blue-deep),var(--blue));color:#fff;font-weight:600;font-size:11px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+
+/* NOTE CARD */
+.note-card{background:rgba(255,255,255,.72);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;cursor:pointer;transition:all .17s;}
+.note-card:hover{border-color:var(--pink);box-shadow:var(--shadow);}
+.note-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(107,174,214,.1);border:1px solid rgba(107,174,214,.25);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--blue-deep);font-weight:500;margin:3px 3px 3px 0;}
+
+/* ARCH */
+.arch-svg-wrap{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;margin-top:14px;}
+.arch-svg-wrap svg{width:100%;height:auto;display:block;}
+
+/* EOD */
+.eod-section{border-left:3px solid var(--blue-light);padding:12px 16px;margin-bottom:14px;background:rgba(107,174,214,.05);border-radius:0 10px 10px 0;}
+.eod-section-title{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--blue-deep);font-weight:700;margin-bottom:8px;}
+.eod-section p,.eod-section li{font-size:13px;color:var(--text2);line-height:1.65;}
+.eod-section ul{padding-left:16px;}
+.eod-section li{margin-bottom:3px;}
+
+/* PRIORITY */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.dot-high{background:#c04050;} .dot-med{background:var(--teal);} .dot-low{background:var(--blue);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:300;background:rgba(255,255,255,.97);border:1px solid var(--border);border-left:3px solid var(--blue-deep);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--text2);box-shadow:var(--shadow-lg);transform:translateY(80px);transition:transform .3s;}
+.toast.show{transform:translateY(0);}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .logo-brand,.logo-tag,.logo-line,.nav-item span,.nav-sec,.sb-label{display:none;}
+  .nav-item{justify-content:center;padding:12px;}
+  .main{margin-left:60px;}
+  .grid-2,.grid-3,.fg{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-brand">excelra <span>workbench</span></div>
+    <div class="logo-tag">SME · BA · Life Sciences</div>
+    <div class="logo-line"></div>
+  </div>
+  <div class="nav">
+    <div class="nav-sec">Overview</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)"><span class="nav-icon">◈</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="nav('glossary',this)"><span class="nav-icon">📖</span><span>Glossary</span></div>
+    <div class="nav-sec">BA Tools</div>
+    <div class="nav-item" onclick="nav('kt',this)"><span class="nav-icon">🎙</span><span>KT Calls + AI</span></div>
+    <div class="nav-item" onclick="nav('requirements',this)"><span class="nav-icon">📋</span><span>Requirements</span></div>
+    <div class="nav-item" onclick="nav('raid',this)"><span class="nav-icon">⚠️</span><span>RAID Log</span></div>
+    <div class="nav-item" onclick="nav('process',this)"><span class="nav-icon">🔄</span><span>Process Flows</span></div>
+    <div class="nav-sec">Knowledge</div>
+    <div class="nav-item" onclick="nav('questions',this)"><span class="nav-icon">❓</span><span>Question Bank</span></div>
+    <div class="nav-item" onclick="nav('checklist',this)"><span class="nav-icon">✅</span><span>Prep Checklist</span></div>
+    <div class="nav-item" onclick="nav('notes',this)"><span class="nav-icon">📝</span><span>Meeting Notes</span></div>
+    <div class="nav-sec">Analysis</div>
+    <div class="nav-item" onclick="nav('arch',this)"><span class="nav-icon">🏗</span><span>Architecture</span></div>
+    <div class="nav-item" onclick="nav('eod',this)"><span class="nav-icon">🌙</span><span>EOD Summary</span></div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-label" id="sbLabel">0 items saved</div>
+    <div class="sb-bar"><div class="sb-fill" id="sbFill"></div></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">SME & <span>BA Workbench</span></div>
+      <div class="topbar-sub">Where data means more · Millipore Merck / SyncoOP</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card s-blue"><div class="stat-num c-blue" id="s-gl">0</div><div class="stat-lbl">Glossary Terms</div></div>
+        <div class="stat-card s-teal"><div class="stat-num c-teal" id="s-kt">0</div><div class="stat-lbl">KT Calls</div></div>
+        <div class="stat-card s-pink"><div class="stat-num c-pink" id="s-rq">0</div><div class="stat-lbl">Requirements</div></div>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card s-lilac"><div class="stat-num c-lilac" id="s-rd">0</div><div class="stat-lbl">RAID Items</div></div>
+        <div class="stat-card s-blue"><div class="stat-num c-blue" id="s-qu">0</div><div class="stat-lbl">Questions</div></div>
+        <div class="stat-card s-pink"><div class="stat-num c-pink" id="s-nt">0</div><div class="stat-lbl">Meeting Notes</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--blue),var(--pink))"></span><span class="card-title">Recent Activity</span></div></div>
+        <div id="recent-act"><div class="empty"><div class="empty-icon">✦</div><div class="empty-text">No activity yet.</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--teal),var(--blue))"></span><span class="card-title">Quick Add</span></div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="nav('glossary');setTimeout(()=>openM('m-gl'),60)">+ Glossary Term</button>
+          <button class="btn btn-ai" onclick="nav('kt');setTimeout(()=>openM('m-kt'),60)">🎙 + KT Call</button>
+          <button class="btn" onclick="nav('requirements');setTimeout(()=>openM('m-req'),60)">+ Requirement</button>
+          <button class="btn" onclick="nav('raid');setTimeout(()=>openM('m-raid'),60)">+ RAID Item</button>
+          <button class="btn" onclick="nav('questions');setTimeout(()=>openM('m-q'),60)">+ Question</button>
+          <button class="btn btn-teal" onclick="nav('notes');setTimeout(()=>openM('m-note'),60)">📝 + Note</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLOSSARY -->
+    <div class="panel" id="panel-glossary">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:var(--blue-deep)"></span><span class="card-title">Domain Glossary</span></div><button class="btn btn-primary" onclick="openM('m-gl')">+ Add Term</button></div>
+        <div class="fr"><div class="sw"><span class="si">🔍</span><input type="text" id="gl-search" placeholder="Search terms…" oninput="renderGl()"/></div></div>
+        <div id="gl-list"></div>
+      </div>
+    </div>
+
+    <!-- KT CALLS -->
+    <div class="panel" id="panel-kt">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--teal),var(--blue))"></span><span class="card-title">KT Call Log · AI Analysis</span></div><button class="btn btn-ai" onclick="openM('m-kt')">🎙 Log + Analyse</button></div>
+        <div id="kt-list"></div>
+      </div>
+      <div id="kt-detail"></div>
+    </div>
+
+    <!-- REQUIREMENTS -->
+    <div class="panel" id="panel-requirements">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:var(--pink-deep)"></span><span class="card-title">Requirements Register</span></div><button class="btn btn-primary" onclick="openM('m-req')">+ Add</button></div>
+        <div class="tabs">
+          <div class="tab active" onclick="fReq('all',this)">All</div>
+          <div class="tab" onclick="fReq('functional',this)">Functional</div>
+          <div class="tab" onclick="fReq('non-functional',this)">Non-Functional</div>
+          <div class="tab" onclick="fReq('user-story',this)">User Stories</div>
+        </div>
+        <table><thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th></th></tr></thead><tbody id="req-tbl"></tbody></table>
+      </div>
+    </div>
+
+    <!-- RAID -->
+    <div class="panel" id="panel-raid">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:#c04050"></span><span class="card-title">RAID Log</span></div><button class="btn btn-primary" onclick="openM('m-raid')">+ Add</button></div>
+        <div class="tabs">
+          <div class="tab active" onclick="fRaid('all',this)">All</div>
+          <div class="tab" onclick="fRaid('risk',this)">Risks</div>
+          <div class="tab" onclick="fRaid('assumption',this)">Assumptions</div>
+          <div class="tab" onclick="fRaid('issue',this)">Issues</div>
+          <div class="tab" onclick="fRaid('dependency',this)">Dependencies</div>
+        </div>
+        <div id="raid-list"></div>
+      </div>
+    </div>
+
+    <!-- PROCESS -->
+    <div class="panel" id="panel-process">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:var(--lilac)"></span><span class="card-title">Process Flows</span></div><button class="btn btn-primary" onclick="openM('m-proc')">+ New Flow</button></div>
+        <div id="proc-list"></div>
+      </div>
+      <div id="proc-detail"></div>
+    </div>
+
+    <!-- QUESTION BANK -->
+    <div class="panel" id="panel-questions">
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center"><span class="stripe" style="background:var(--teal)"></span><span class="card-title">Question Bank</span></div>
+          <button class="btn btn-primary" onclick="openM('m-q')">+ Add Question</button>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="fQ('all',this)">All</div>
+          <div class="tab" onclick="fQ('open',this)">Open</div>
+          <div class="tab" onclick="fQ('answered',this)">Answered</div>
+          <div class="tab" onclick="fQ('parked',this)">Parked</div>
+        </div>
+        <div id="q-list"></div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="panel" id="panel-checklist">
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center"><span class="stripe" style="background:var(--blue)"></span><span class="card-title">Prep Checklist</span></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span id="cl-pct" style="font-size:12px;color:var(--blue-deep);font-weight:600">0%</span>
+            <button class="btn btn-primary" onclick="openM('m-cl')">+ Add Item</button>
+          </div>
+        </div>
+        <div class="progress" style="margin-bottom:18px"><div class="progress-fill" id="cl-bar" style="width:0%"></div></div>
+        <div id="cl-items"></div>
+      </div>
+    </div>
+
+    <!-- MEETING NOTES -->
+    <div class="panel" id="panel-notes">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--pink),var(--lilac))"></span><span class="card-title">Meeting Notes</span></div><button class="btn btn-teal" onclick="openM('m-note')">📝 + New Note</button></div>
+        <div id="notes-list"></div>
+      </div>
+      <div id="note-detail"></div>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <div class="panel" id="panel-arch">
+      <div class="card">
+        <div class="card-header"><div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--blue-deep),var(--teal))"></span><span class="card-title">Architecture & Diagrams · AI</span></div><button class="btn btn-ai" onclick="openM('m-arch')">🏗 + New Diagram</button></div>
+        <div id="arch-list"></div>
+      </div>
+      <div id="arch-detail"></div>
+    </div>
+
+    <!-- EOD SUMMARY -->
+    <div class="panel" id="panel-eod">
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center"><span class="stripe" style="background:linear-gradient(var(--pink-deep),var(--lilac))"></span><span class="card-title">End of Day Summary</span></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="date" id="eod-date" style="width:160px"/>
+            <button class="btn btn-ai" onclick="genEOD()">✨ Generate</button>
+            <button class="btn btn-primary" onclick="exportEODpdf()">📄 Export PDF</button>
+          </div>
+        </div>
+        <div id="eod-content"><div class="empty"><div class="empty-icon">🌙</div><div class="empty-text">Select a date and click Generate to create your EOD summary.</div></div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- GLOSSARY -->
+<div class="modal-overlay hidden" id="m-gl">
+  <div class="modal">
+    <div class="modal-title">Add <span>Glossary Term</span></div>
+    <div class="fr"><label>Term</label><input id="g-term" placeholder="e.g. PROTAC"/></div>
+    <div class="fr"><label>Definition</label><textarea id="g-def" placeholder="What does it mean in this context?"></textarea></div>
+    <div class="fg">
+      <div class="fr"><label>Domain</label><select id="g-dom"><option value="cheminformatics">Cheminformatics</option><option value="biology">Biology</option><option value="pharmacology">Pharmacology</option><option value="informatics">Informatics</option><option value="general">General</option></select></div>
+      <div class="fr"><label>Source</label><input id="g-src" placeholder="e.g. KT Call 1"/></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-gl')">Cancel</button><button class="btn btn-primary" onclick="addGl()">Save Term</button></div>
+  </div>
+</div>
+
+<!-- KT -->
+<div class="modal-overlay hidden" id="m-kt">
+  <div class="modal">
+    <div class="modal-title">🎙 Log <span>KT Call</span></div>
+    <div class="fg">
+      <div class="fr"><label>Date</label><input type="date" id="kt-date"/></div>
+      <div class="fr"><label>Call #</label><input id="kt-num" placeholder="KT-01"/></div>
+    </div>
+    <div class="fr"><label>Topic / Title</label><input id="kt-title" placeholder="e.g. SyncoOP Data Flow Overview"/></div>
+    <div class="fr"><label>Attendees</label><input id="kt-att" placeholder="Names or roles, comma separated"/></div>
+    <div class="fr"><label>Transcript / Notes <span style="color:var(--pink-deep);font-size:10px;text-transform:none;letter-spacing:0">← Paste full transcript for AI analysis</span></label>
+      <textarea id="kt-tx" style="min-height:150px" placeholder="Paste the meeting transcript here. AI will extract summary, action items, next steps, open questions, new terms, reference docs, risks and suggestions automatically…"></textarea></div>
+    <div class="fr"><label>Additional Notes</label><textarea id="kt-notes" style="min-height:55px"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeM('m-kt')">Cancel</button>
+      <button class="btn btn-ai" onclick="addKT(true)">✨ Save + AI Analyse</button>
+      <button class="btn btn-primary" onclick="addKT(false)">Save Only</button>
+    </div>
+  </div>
+</div>
+
+<!-- REQUIREMENTS -->
+<div class="modal-overlay hidden" id="m-req">
+  <div class="modal">
+    <div class="modal-title">Add <span>Requirement</span></div>
+    <div class="fg">
+      <div class="fr"><label>Type</label><select id="rq-type"><option value="functional">Functional</option><option value="non-functional">Non-Functional</option><option value="user-story">User Story</option></select></div>
+      <div class="fr"><label>Priority</label><select id="rq-pri"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+    </div>
+    <div class="fr"><label>Title</label><input id="rq-title"/></div>
+    <div class="fr"><label>Description</label><textarea id="rq-desc"></textarea></div>
+    <div class="fr"><label>Acceptance Criteria</label><textarea id="rq-ac" style="min-height:55px" placeholder="How do we know this is done?"></textarea></div>
+    <div class="fr"><label>Source</label><input id="rq-src" placeholder="e.g. KT-02"/></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-req')">Cancel</button><button class="btn btn-primary" onclick="addReq()">Save</button></div>
+  </div>
+</div>
+
+<!-- RAID -->
+<div class="modal-overlay hidden" id="m-raid">
+  <div class="modal">
+    <div class="modal-title">Add <span>RAID Item</span></div>
+    <div class="fg">
+      <div class="fr"><label>Type</label><select id="rd-type"><option value="risk">Risk</option><option value="assumption">Assumption</option><option value="issue">Issue</option><option value="dependency">Dependency</option></select></div>
+      <div class="fr"><label>Severity</label><select id="rd-sev"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></div>
+    </div>
+    <div class="fr"><label>Description</label><textarea id="rd-desc"></textarea></div>
+    <div class="fg">
+      <div class="fr"><label>Owner</label><input id="rd-own" placeholder="Who owns this?"/></div>
+      <div class="fr"><label>Due Date</label><input type="date" id="rd-due"/></div>
+    </div>
+    <div class="fr"><label>Mitigation / Action</label><textarea id="rd-act" style="min-height:55px"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-raid')">Cancel</button><button class="btn btn-primary" onclick="addRaid()">Save</button></div>
+  </div>
+</div>
+
+<!-- PROCESS -->
+<div class="modal-overlay hidden" id="m-proc">
+  <div class="modal">
+    <div class="modal-title">New <span>Process Flow</span></div>
+    <div class="fr"><label>Flow Name</label><input id="pr-name" placeholder="e.g. SyncoOP Order Intake"/></div>
+    <div class="fr"><label>Description</label><textarea id="pr-desc" style="min-height:55px"></textarea></div>
+    <div class="fr"><label>Steps (one per line)</label><textarea id="pr-steps" style="min-height:110px" placeholder="Step 1: Receive order&#10;Step 2: Validate compound ID&#10;Step 3: …"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-proc')">Cancel</button><button class="btn btn-primary" onclick="addProc()">Save Flow</button></div>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div class="modal-overlay hidden" id="m-q">
+  <div class="modal">
+    <div class="modal-title">Add <span>Question</span></div>
+    <div class="fr"><label>Question</label><textarea id="q-text"></textarea></div>
+    <div class="fg">
+      <div class="fr"><label>Context / Source</label><input id="q-ctx" placeholder="e.g. KT-01"/></div>
+      <div class="fr"><label>Status</label><select id="q-status"><option value="open">Open</option><option value="parked">Parked</option><option value="answered">Answered</option></select></div>
+    </div>
+    <div class="fr"><label>Answer (if known)</label><textarea id="q-ans" style="min-height:55px"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-q')">Cancel</button><button class="btn btn-primary" onclick="addQ()">Save</button></div>
+  </div>
+</div>
+
+<!-- ANSWER MODAL -->
+<div class="modal-overlay hidden" id="m-ans">
+  <div class="modal">
+    <div class="modal-title">✅ Add <span>Answer</span></div>
+    <input type="hidden" id="ans-qid"/>
+    <div class="fr"><label>Question</label><div id="ans-q-txt" style="font-size:13px;color:var(--text2);padding:10px;background:var(--surface2);border-radius:8px;line-height:1.6"></div></div>
+    <div class="fr"><label>Answer</label><textarea id="ans-text" style="min-height:100px" placeholder="Type the answer here…"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-ans')">Cancel</button><button class="btn btn-green" onclick="saveAnswer()">✅ Save & Mark Answered</button></div>
+  </div>
+</div>
+
+<!-- CHECKLIST ADD -->
+<div class="modal-overlay hidden" id="m-cl">
+  <div class="modal">
+    <div class="modal-title">Add <span>Checklist Item</span></div>
+    <div class="fr"><label>Task / Item</label><textarea id="cl-text" placeholder="What needs to be done?" style="min-height:80px"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-cl')">Cancel</button><button class="btn btn-primary" onclick="addCL()">Add Item</button></div>
+  </div>
+</div>
+
+<!-- MEETING NOTE -->
+<div class="modal-overlay hidden" id="m-note">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-title">📝 New <span>Meeting Note</span></div>
+    <div class="fg">
+      <div class="fr"><label>Date</label><input type="date" id="nt-date"/></div>
+      <div class="fr"><label>Meeting / Topic</label><input id="nt-topic" placeholder="e.g. KT-01 Intro Call"/></div>
+    </div>
+    <div class="fr"><label>Attendees</label><input id="nt-att" placeholder="Names or roles"/></div>
+    <div class="fr"><label>Decisions Made</label><textarea id="nt-dec" placeholder="Key decisions from this meeting…"></textarea></div>
+    <div class="fr">
+      <label>Key Questions <span style="color:var(--blue-deep);font-size:10px;text-transform:none;letter-spacing:0">← Each line auto-added to Question Bank</span></label>
+      <textarea id="nt-kq" placeholder="One question per line…&#10;e.g. What is the current data flow in SyncoOP?" style="min-height:90px"></textarea>
+    </div>
+    <div class="fr">
+      <label>Action Items <span style="color:var(--teal);font-size:10px;text-transform:none;letter-spacing:0">← Each line auto-added to Prep Checklist</span></label>
+      <textarea id="nt-ai" placeholder="One action per line…&#10;e.g. Send process flow doc to client by Friday" style="min-height:90px"></textarea>
+    </div>
+    <div class="fr"><label>General Notes</label><textarea id="nt-gen" style="min-height:70px" placeholder="Any other notes…"></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-note')">Cancel</button><button class="btn btn-teal" onclick="saveNote()">📝 Save Note</button></div>
+  </div>
+</div>
+
+<!-- ARCH -->
+<div class="modal-overlay hidden" id="m-arch">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-title">🏗 New <span>Architecture Diagram</span></div>
+    <div class="fg">
+      <div class="fr"><label>Diagram Title</label><input id="ar-title" placeholder="e.g. SyncoOP System Overview"/></div>
+      <div class="fr"><label>Type</label><select id="ar-type"><option value="system">System Architecture</option><option value="process">Process Flow</option><option value="data">Data Flow</option><option value="integration">Integration Map</option><option value="sequence">Sequence Diagram</option></select></div>
+    </div>
+    <div class="fr"><label>Description / Requirements</label><textarea id="ar-desc" style="min-height:140px" placeholder="Describe what the diagram should show. e.g.:&#10;- SyncoOP receives orders from ERP&#10;- Data goes through validation layer&#10;- Approved orders trigger Benchling registration&#10;- Results flow back to ERP via API&#10;&#10;The more detail you provide, the better the diagram."></textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeM('m-arch')">Cancel</button><button class="btn btn-ai" onclick="genArch()">✨ Generate Diagram</button></div>
+  </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+let S = {glossary:[],ktCalls:[],requirements:[],raid:[],questions:[],processes:[],checklist:[],notes:[],diagrams:[]};
+const KEY = 'excelra_wb_v3';
+
+function uid(){ return 'x'+Math.random().toString(36).substr(2,9); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+
+// ==================== DEFAULTS ====================
+const DEF_GL = [
+  {id:uid(),term:'SMILES',definition:'Simplified Molecular Input Line Entry System — encodes molecular structure as a text string. Canonical SMILES ensures one unique string per molecule, critical for database lookups.',domain:'cheminformatics',source:'Pre-KT prep'},
+  {id:uid(),term:'PROTAC',definition:'Proteolysis Targeting Chimera — bifunctional molecule that recruits an E3 ubiquitin ligase to a target protein, marking it for degradation. A newer drug modality beyond small-molecule inhibition.',domain:'pharmacology',source:'Pre-KT prep'},
+  {id:uid(),term:'ADME',definition:'Absorption, Distribution, Metabolism, Excretion — four pharmacokinetic properties defining how a drug behaves in the body. Core to drug candidate evaluation.',domain:'pharmacology',source:'Pre-KT prep'},
+  {id:uid(),term:'RDF',definition:'Reaction Data Format (cheminformatics) OR Resource Description Framework (semantic web). Clarify which applies in your project context.',domain:'cheminformatics',source:'Pre-KT prep'},
+  {id:uid(),term:'Bioassay',definition:'Experimental procedure measuring biological activity of a compound. Common metrics: IC50, EC50, Ki. Results feed into ADME and lead optimisation workflows.',domain:'biology',source:'Pre-KT prep'},
+  {id:uid(),term:'IC50',definition:'Half-maximal inhibitory concentration — compound concentration needed to inhibit a biological process by 50%. Lower IC50 = more potent.',domain:'pharmacology',source:'Pre-KT prep'},
+  {id:uid(),term:'Pathway',definition:'Biological signalling cascade (e.g. MAPK, PI3K/AKT) describing how molecules interact to produce cellular responses.',domain:'biology',source:'Pre-KT prep'},
+  {id:uid(),term:'SyncoOP',definition:'Millipore Merck application — exact scope to be confirmed in KT calls.',domain:'informatics',source:'Project brief'},
+];
+const DEF_Q = [
+  {id:uid(),text:'Who are the primary end users of SyncoOP and what is their main pain point?',context:'KT Prep',status:'open',answer:'',date:today()},
+  {id:uid(),text:'What does the current process look like vs. the desired state?',context:'KT Prep',status:'open',answer:'',date:today()},
+  {id:uid(),text:'What systems does SyncoOP integrate with and what are the data flows?',context:'KT Prep',status:'open',answer:'',date:today()},
+  {id:uid(),text:'What artefacts was the previous SME responsible for maintaining?',context:'Transition',status:'open',answer:'',date:today()},
+  {id:uid(),text:'Is "RDF" used as Reaction Data Format or Resource Description Framework in this project?',context:'Terminology',status:'open',answer:'',date:today()},
+  {id:uid(),text:'What does success look like for the client — how is it measured?',context:'KT Prep',status:'open',answer:'',date:today()},
+];
+const DEF_CL = [
+  {id:'c1',text:'Set up domain glossary with cheminformatics terms',done:false},
+  {id:'c2',text:'Research SMILES notation and RDKit basics (30 min)',done:false},
+  {id:'c3',text:'Read a PROTAC explainer / mechanism of action overview',done:false},
+  {id:'c4',text:'Understand ADME — Absorption, Distribution, Metabolism, Excretion',done:false},
+  {id:'c5',text:'Clarify scope of Pathways and Reaction Steps with team',done:false},
+  {id:'c6',text:'Set up call recording tool (Fireflies or Otter)',done:false},
+  {id:'c7',text:'Create meeting minutes template',done:false},
+  {id:'c8',text:'Prepare 10 standard BA questions for KT calls',done:false},
+  {id:'c9',text:'Review documentation received from outgoing SME',done:false},
+  {id:'c10',text:'Map stakeholders — client side and Excelra side',done:false},
+  {id:'c11',text:'Understand SyncoOP application scope and current state',done:false},
+  {id:'c12',text:'Set up RAID log and requirements register (done!)',done:true},
+  {id:'c13',text:'Identify what artefacts the previous SME was maintaining',done:false},
+  {id:'c14',text:'Note all assumptions before KT calls start',done:false},
+];
+
+// ==================== PERSISTENCE ====================
+function save(){localStorage.setItem(KEY,JSON.stringify(S));updateMeta();updateStats();}
+function load(){
+  const r=localStorage.getItem(KEY);
+  if(r){S=JSON.parse(r);}
+  else{S.glossary=[...DEF_GL];S.questions=[...DEF_Q];S.checklist=[...DEF_CL];save();}
+  renderAll();
+}
+function updateMeta(){
+  const n=S.glossary.length+S.ktCalls.length+S.requirements.length+S.raid.length+S.questions.length+S.processes.length+S.notes.length+S.diagrams.length;
+  document.getElementById('sbLabel').textContent=n+' items saved';
+  document.getElementById('sbFill').style.width=Math.min(100,(n/200)*100)+'%';
+}
+
+// ==================== NAV ====================
+function nav(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
+}
+
+// ==================== MODAL ====================
+function openM(id){document.getElementById(id).classList.remove('hidden');}
+function closeM(id){document.getElementById(id).classList.add('hidden');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))closeM(e.target.id);});
+
+// ==================== TOAST ====================
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ==================== STATS ====================
+function updateStats(){
+  document.getElementById('s-gl').textContent=S.glossary.length;
+  document.getElementById('s-kt').textContent=S.ktCalls.length;
+  document.getElementById('s-rq').textContent=S.requirements.length;
+  document.getElementById('s-rd').textContent=S.raid.length;
+  document.getElementById('s-qu').textContent=S.questions.length;
+  document.getElementById('s-nt').textContent=S.notes.length;
+  renderActivity();
+}
+function renderActivity(){
+  const all=[
+    ...S.ktCalls.map(x=>({lbl:'KT Call',title:x.title,date:x.date,c:'teal'})),
+    ...S.notes.map(x=>({lbl:'Note',title:x.topic,date:x.date,c:'pink'})),
+    ...S.requirements.map(x=>({lbl:'Requirement',title:x.title,date:x.date,c:'blue'})),
+    ...S.raid.map(x=>({lbl:x.type,title:x.desc.substring(0,50)+'…',date:x.date,c:x.type==='risk'?'red':'lilac'})),
+  ].slice(-8).reverse();
+  const el=document.getElementById('recent-act');
+  if(!all.length){el.innerHTML='<div class="empty"><div class="empty-icon">✦</div><div class="empty-text">No activity yet.</div></div>';return;}
+  el.innerHTML=all.map(a=>`<div style="display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)"><span class="tag t-${a.c}">${a.lbl}</span><span style="font-size:13px;flex:1">${a.title}</span><span style="font-size:11px;color:var(--muted)">${a.date||''}</span></div>`).join('');
+}
+
+// ==================== GLOSSARY ====================
+function addGl(){
+  const term=document.getElementById('g-term').value.trim(),def=document.getElementById('g-def').value.trim();
+  if(!term||!def){toast('Term and definition required');return;}
+  S.glossary.push({id:uid(),term,definition:def,domain:document.getElementById('g-dom').value,source:document.getElementById('g-src').value});
+  save();renderGl();closeM('m-gl');
+  ['g-term','g-def','g-src'].forEach(i=>document.getElementById(i).value='');
+  toast('Term saved ✓');
+}
+function delGl(id){S.glossary=S.glossary.filter(x=>x.id!==id);save();renderGl();}
+function renderGl(){
+  const q=(document.getElementById('gl-search').value||'').toLowerCase();
+  const list=S.glossary.filter(x=>!q||x.term.toLowerCase().includes(q)||x.definition.toLowerCase().includes(q));
+  const el=document.getElementById('gl-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-text">No terms yet.</div></div>';return;}
+  const dc={cheminformatics:'blue',biology:'teal',pharmacology:'pink',informatics:'lilac',general:'gray'};
+  el.innerHTML=list.map(x=>`<div class="gl-item"><div style="min-width:155px"><div class="gl-term">${x.term}</div><div style="margin-top:5px"><span class="tag t-${dc[x.domain]||'gray'}">${x.domain}</span>${x.source?'<span style="font-size:10px;color:var(--muted);margin-left:6px">'+x.source+'</span>':''}</div></div><div class="gl-def">${x.definition}</div><button class="btn btn-danger btn-sm" onclick="delGl('${x.id}')">✕</button></div>`).join('');
+}
+
+// ==================== KT CALLS ====================
+async function addKT(analyse){
+  const title=document.getElementById('kt-title').value.trim();
+  if(!title){toast('Title required');return;}
+  const tx=document.getElementById('kt-tx').value.trim();
+  const call={id:uid(),num:document.getElementById('kt-num').value||'KT-'+(S.ktCalls.length+1),
+    title,date:document.getElementById('kt-date').value,
+    attendees:document.getElementById('kt-att').value,transcript:tx,
+    notes:document.getElementById('kt-notes').value,analysis:null};
+  S.ktCalls.push(call);save();renderKT();closeM('m-kt');
+  ['kt-title','kt-num','kt-att','kt-tx','kt-notes'].forEach(i=>document.getElementById(i).value='');
+  toast('KT Call saved ✓');
+  if(analyse&&tx){nav('kt');viewKT(call.id,true);}
+  else if(analyse&&!tx){toast('No transcript — saved without analysis');}
+}
+function delKT(id){S.ktCalls=S.ktCalls.filter(x=>x.id!==id);save();renderKT();document.getElementById('kt-detail').innerHTML='';}
+function viewKT(id,auto=false){
+  const c=S.ktCalls.find(x=>x.id===id);if(!c)return;
+  const ah=c.analysis?renderAHtml(c.analysis):`<div class="ai-panel"><div class="ai-panel-title">✨ AI Analysis</div>${c.transcript?`<p style="font-size:13px;color:var(--text2);margin-bottom:13px">Transcript available (${c.transcript.split(' ').length} words) — click to analyse.</p><button class="btn btn-ai" onclick="runKTAnalysis('${id}')">✨ Analyse Transcript</button>`:'<p style="font-size:13px;color:var(--muted)">No transcript provided.</p>'}</div>`;
+  document.getElementById('kt-detail').innerHTML=`<div class="card" style="border-color:rgba(107,174,214,.4)">
+    <div class="card-header"><div style="display:flex;align-items:center;gap:10px"><span class="tag t-teal">${c.num}</span><span style="font-size:15px;font-weight:600">${c.title}</span></div><button class="btn btn-sm" onclick="document.getElementById('kt-detail').innerHTML=''">✕ Close</button></div>
+    <div class="grid-2" style="margin-bottom:14px"><div><div class="card-title" style="margin-bottom:4px">Date · Attendees</div><div style="font-size:13px;color:var(--text2)">${c.date||'—'} · ${c.attendees||'—'}</div></div><div><div class="card-title" style="margin-bottom:4px">Transcript</div><div style="font-size:13px;color:var(--text2)">${c.transcript?'✓ '+c.transcript.split(' ').length+' words':'Not provided'}</div></div></div>
+    ${c.notes?`<div style="margin-bottom:14px"><div class="card-title" style="margin-bottom:4px">Notes</div><div style="font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.65">${c.notes}</div></div>`:''}
+    <div id="an-${id}">${ah}</div></div>`;
+  if(auto&&c.transcript&&!c.analysis)setTimeout(()=>runKTAnalysis(id),300);
+}
+async function runKTAnalysis(id){
+  const c=S.ktCalls.find(x=>x.id===id);if(!c||!c.transcript)return;
+  const box=document.getElementById('an-'+id);
+  box.innerHTML=`<div class="ai-panel"><div class="ai-panel-title">✨ AI Analysis</div><div class="ai-loading"><div class="spinner"></div>Analysing transcript…</div></div>`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:'You are an expert SME/BA analyst specialising in life sciences informatics, LIMS/ELN (Benchling, SyncoOP, Millipore Merck). Analyse KT call transcripts and return structured JSON only — no markdown, no extra text.',
+        messages:[{role:'user',content:`Analyse this KT call and return JSON with keys:
+{"summary":"2-3 sentence summary","keyTopics":["topic"],"actionItems":[{"item":"text","owner":"who","priority":"high|medium|low"}],"nextSteps":["step"],"openQuestions":["question"],"newTerms":[{"term":"t","definition":"d"}],"referenceDocs":["doc"],"risks":["risk"],"suggestions":["suggestion"]}
+Title:${c.title} Attendees:${c.attendees||'N/A'}
+Transcript:
+${c.transcript}`}]})});
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+    const an=JSON.parse(txt);c.analysis=an;save();box.innerHTML=renderAHtml(an);
+    if(an.newTerms&&an.newTerms.length){an.newTerms.forEach(t=>{if(!S.glossary.find(g=>g.term.toLowerCase()===t.term.toLowerCase()))S.glossary.push({id:uid(),term:t.term,definition:t.definition,domain:'general',source:c.num});});save();renderGl();toast('New terms added to Glossary ✓');}
+  }catch(e){box.innerHTML=`<div class="ai-panel"><div class="ai-panel-title">✨ AI Analysis</div><p style="color:#b04050;font-size:13px">Failed: ${e.message}</p><br><button class="btn btn-ai btn-sm" onclick="runKTAnalysis('${id}')">Retry</button></div>`;}
+}
+function renderAHtml(a){
+  const pc={high:'red',medium:'teal',low:'blue'};
+  return`<div class="ai-panel">
+    <div class="ai-panel-title">✨ AI Analysis Complete</div>
+    ${a.summary?`<div class="ai-sec"><div class="ai-sec-lbl">📋 Summary</div><p>${a.summary}</p></div>`:''}
+    ${a.keyTopics&&a.keyTopics.length?`<div class="ai-sec"><div class="ai-sec-lbl">🏷 Key Topics</div><div style="display:flex;flex-wrap:wrap;gap:6px">${a.keyTopics.map(t=>`<span class="tag t-blue">${t}</span>`).join('')}</div></div>`:''}
+    ${a.actionItems&&a.actionItems.length?`<div class="ai-sec"><div class="ai-sec-lbl">⚡ Action Items</div><ul>${a.actionItems.map(ai=>`<li style="margin-bottom:7px">${ai.item}${ai.owner&&ai.owner!=='TBD'?' <span style="color:var(--muted);font-size:11px">→ '+ai.owner+'</span>':''} <span class="tag t-${pc[ai.priority]||'gray'}" style="margin-left:4px">${ai.priority}</span></li>`).join('')}</ul></div>`:''}
+    ${a.nextSteps&&a.nextSteps.length?`<div class="ai-sec"><div class="ai-sec-lbl">👣 Next Steps</div><ul>${a.nextSteps.map(s=>`<li>${s}</li>`).join('')}</ul></div>`:''}
+    ${a.openQuestions&&a.openQuestions.length?`<div class="ai-sec"><div class="ai-sec-lbl">❓ Open Questions</div><ul>${a.openQuestions.map(q=>`<li>${q}</li>`).join('')}</ul><button class="btn btn-sm" style="margin-top:9px" onclick='bulkAddQ(${JSON.stringify(a.openQuestions)})'>+ Add all to Question Bank</button></div>`:''}
+    ${a.newTerms&&a.newTerms.length?`<div class="ai-sec"><div class="ai-sec-lbl">📖 New Terms (added to Glossary)</div><div>${a.newTerms.map(t=>`<span class="tag t-teal" style="margin:2px">${t.term}</span>`).join('')}</div></div>`:''}
+    ${a.referenceDocs&&a.referenceDocs.length?`<div class="ai-sec"><div class="ai-sec-lbl">📚 Reference Docs Suggested</div><ul>${a.referenceDocs.map(d=>`<li>${d}</li>`).join('')}</ul></div>`:''}
+    ${a.risks&&a.risks.length?`<div class="ai-sec"><div class="ai-sec-lbl">⚠️ Risks / Concerns</div><ul>${a.risks.map(r=>`<li>${r}</li>`).join('')}</ul></div>`:''}
+    ${a.suggestions&&a.suggestions.length?`<div class="ai-sec"><div class="ai-sec-lbl">💡 SME/BA Suggestions</div><ul>${a.suggestions.map(s=>`<li>${s}</li>`).join('')}</ul></div>`:''}
+  </div>`;
+}
+function bulkAddQ(qs){qs.forEach(q=>S.questions.push({id:uid(),text:q,context:'AI Extracted',status:'open',answer:'',date:today()}));save();renderQ();toast('Questions added to bank ✓');}
+function renderKT(){
+  const el=document.getElementById('kt-list');
+  if(!S.ktCalls.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎙</div><div class="empty-text">No KT calls logged yet.</div></div>';return;}
+  el.innerHTML=S.ktCalls.map(x=>`<div class="item-card" onclick="viewKT('${x.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:11px;color:var(--muted)">${x.date||'No date'}</div>
+      <div style="font-size:14px;font-weight:600;margin:4px 0"><span style="color:var(--blue-deep)">${x.num}</span> — ${x.title}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
+        ${x.attendees?'<span class="tag t-gray">'+x.attendees.split(',').length+' attendees</span>':''}
+        ${x.transcript?'<span class="tag t-teal">📄 Transcript</span>':''}
+        ${x.analysis?'<span class="tag t-blue">✨ Analysed</span>':'<span class="tag t-pink">Pending</span>'}
+      </div></div>
+      <div style="display:flex;gap:6px">
+        ${x.transcript&&!x.analysis?`<button class="btn btn-ai btn-sm" onclick="event.stopPropagation();viewKT('${x.id}',true)">✨ Analyse</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delKT('${x.id}')">✕</button>
+      </div>
+    </div></div>`).join('');
+}
+
+// ==================== REQUIREMENTS ====================
+let rqF='all';
+function addReq(){
+  const t=document.getElementById('rq-title').value.trim();if(!t){toast('Title required');return;}
+  const type=document.getElementById('rq-type').value,n=S.requirements.length+1;
+  const pfx=type==='functional'?'FR':type==='non-functional'?'NFR':'US';
+  S.requirements.push({id:uid(),rid:pfx+String(n).padStart(3,'0'),title:t,type,priority:document.getElementById('rq-pri').value,desc:document.getElementById('rq-desc').value,ac:document.getElementById('rq-ac').value,source:document.getElementById('rq-src').value,status:'draft',date:today()});
+  save();renderReq();closeM('m-req');
+  ['rq-title','rq-desc','rq-ac','rq-src'].forEach(i=>document.getElementById(i).value='');
+  toast('Requirement saved ✓');
+}
+function delReq(id){S.requirements=S.requirements.filter(x=>x.id!==id);save();renderReq();}
+function fReq(f,el){rqF=f;document.querySelectorAll('#panel-requirements .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderReq();}
+function renderReq(){
+  const list=rqF==='all'?S.requirements:S.requirements.filter(x=>x.type===rqF);
+  const tb=document.getElementById('req-tbl');
+  if(!list.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:34px">No requirements yet.</td></tr>';return;}
+  const pc={high:'red',medium:'teal',low:'blue'},tc={functional:'blue','non-functional':'pink','user-story':'teal'};
+  tb.innerHTML=list.map(x=>`<tr><td style="color:var(--blue-deep);font-weight:600;white-space:nowrap">${x.rid}</td><td>${x.title}<br><span style="font-size:11px;color:var(--muted)">${x.source||''}</span></td><td><span class="tag t-${tc[x.type]||'gray'}">${x.type}</span></td><td><span class="dot dot-${x.priority==='high'?'high':x.priority==='medium'?'med':'low'}" style="margin-right:5px"></span>${x.priority}</td><td><span class="tag t-gray">${x.status}</span></td><td><button class="btn btn-danger btn-sm" onclick="delReq('${x.id}')">✕</button></td></tr>`).join('');
+}
+
+// ==================== RAID ====================
+let rdF='all';
+function addRaid(){
+  const d=document.getElementById('rd-desc').value.trim();if(!d){toast('Description required');return;}
+  S.raid.push({id:uid(),type:document.getElementById('rd-type').value,severity:document.getElementById('rd-sev').value,desc:d,owner:document.getElementById('rd-own').value,due:document.getElementById('rd-due').value,action:document.getElementById('rd-act').value,date:today()});
+  save();renderRaid();closeM('m-raid');
+  ['rd-desc','rd-own','rd-act'].forEach(i=>document.getElementById(i).value='');
+  toast('RAID item saved ✓');
+}
+function delRaid(id){S.raid=S.raid.filter(x=>x.id!==id);save();renderRaid();}
+function fRaid(f,el){rdF=f;document.querySelectorAll('#panel-raid .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderRaid();}
+function renderRaid(){
+  const list=rdF==='all'?S.raid:S.raid.filter(x=>x.type===rdF);
+  const el=document.getElementById('raid-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">No RAID items yet.</div></div>';return;}
+  const sc={high:'red',medium:'teal',low:'blue'};
+  el.innerHTML=list.map(x=>`<div class="raid-item ${x.type}"><div style="display:flex;justify-content:space-between"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">${x.type} <span class="tag t-${sc[x.severity]||'gray'}">${x.severity}</span></div><div style="font-size:13px;line-height:1.5">${x.desc}</div>${x.action?`<div style="font-size:12px;color:var(--blue-deep);margin-top:6px">→ ${x.action}</div>`:''}<div style="font-size:11px;color:var(--muted);margin-top:5px">${x.owner?'Owner: '+x.owner:''} ${x.due?'· Due: '+x.due:''}</div></div><button class="btn btn-danger btn-sm" onclick="delRaid('${x.id}')">✕</button></div></div>`).join('');
+}
+
+// ==================== PROCESS ====================
+function addProc(){
+  const name=document.getElementById('pr-name').value.trim();if(!name){toast('Name required');return;}
+  const steps=document.getElementById('pr-steps').value.trim().split('\n').filter(s=>s.trim());
+  S.processes.push({id:uid(),name,desc:document.getElementById('pr-desc').value,steps,date:today()});
+  save();renderProc();closeM('m-proc');
+  ['pr-name','pr-desc','pr-steps'].forEach(i=>document.getElementById(i).value='');
+  toast('Process flow saved ✓');
+}
+function delProc(id){S.processes=S.processes.filter(x=>x.id!==id);save();renderProc();}
+function viewProc(id){
+  const p=S.processes.find(x=>x.id===id);if(!p)return;
+  document.getElementById('proc-detail').innerHTML=`<div class="card" style="border-color:rgba(196,184,216,.5)"><div class="card-header"><span style="font-family:var(--serif);font-size:17px">${p.name}</span><button class="btn btn-sm" onclick="document.getElementById('proc-detail').innerHTML=''">✕</button></div>${p.desc?`<p style="font-size:13px;color:var(--muted);margin-bottom:18px">${p.desc}</p>`:''}<div style="display:flex;flex-wrap:wrap;gap:13px;align-items:center">${p.steps.map((s,i)=>`<div class="step-card"><div class="step-num">${i+1}</div><div style="font-size:12px;line-height:1.5">${s}</div></div>${i<p.steps.length-1?'<span style="color:var(--border2);font-size:22px">→</span>':''}`).join('')}</div></div>`;
+}
+function renderProc(){
+  const el=document.getElementById('proc-list');
+  if(!S.processes.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔄</div><div class="empty-text">No process flows yet.</div></div>';return;}
+  el.innerHTML=S.processes.map(x=>`<div class="item-card" onclick="viewProc('${x.id}')"><div style="display:flex;justify-content:space-between"><div><div style="font-size:14px;font-weight:600">${x.name}</div>${x.desc?'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+x.desc+'</div>':''}<div style="margin-top:7px"><span class="tag t-lilac">${x.steps.length} steps</span></div></div><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delProc('${x.id}')">✕</button></div></div>`).join('');
+}
+
+// ==================== QUESTION BANK ====================
+let qF='all';
+function addQ(){
+  const t=document.getElementById('q-text').value.trim();if(!t){toast('Question required');return;}
+  S.questions.push({id:uid(),text:t,context:document.getElementById('q-ctx').value,status:document.getElementById('q-status').value,answer:document.getElementById('q-ans').value,date:today()});
+  save();renderQ();closeM('m-q');
+  ['q-text','q-ctx','q-ans'].forEach(i=>document.getElementById(i).value='');
+  toast('Question saved ✓');
+}
+function delQ(id){S.questions=S.questions.filter(x=>x.id!==id);save();renderQ();}
+function fQ(f,el){qF=f;document.querySelectorAll('#panel-questions .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderQ();}
+
+function openAnswerModal(id){
+  const q=S.questions.find(x=>x.id===id);if(!q)return;
+  document.getElementById('ans-qid').value=id;
+  document.getElementById('ans-q-txt').textContent=q.text;
+  document.getElementById('ans-text').value=q.answer||'';
+  openM('m-ans');
+}
+function saveAnswer(){
+  const id=document.getElementById('ans-qid').value;
+  const ans=document.getElementById('ans-text').value.trim();
+  if(!ans){toast('Please enter an answer');return;}
+  const q=S.questions.find(x=>x.id===id);if(!q)return;
+  q.answer=ans;q.status='answered';save();renderQ();closeM('m-ans');
+  toast('Answer saved · Status → Answered ✓');
+}
+
+function renderQ(){
+  const list=qF==='all'?S.questions:S.questions.filter(x=>x.status===qF);
+  const el=document.getElementById('q-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">❓</div><div class="empty-text">No questions yet.</div></div>';return;}
+  const sc={open:'red',answered:'green',parked:'teal'};
+  el.innerHTML=list.map(x=>`
+    <div style="padding:13px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span class="tag t-${sc[x.status]}">${x.status}</span>
+            ${x.context?'<span style="font-size:11px;color:var(--muted)">'+x.context+'</span>':''}
+          </div>
+          <div style="font-size:13px;line-height:1.55">${x.text}</div>
+          ${x.answer?`<div class="ans-box"><p>→ ${x.answer}</p></div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+          ${x.status!=='answered'?`<button class="btn btn-green btn-sm" onclick="openAnswerModal('${x.id}')">✅ Answer</button>`:''}
+          ${x.status==='answered'?`<button class="btn btn-sm" onclick="openAnswerModal('${x.id}')">✏️ Edit Ans</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="delQ('${x.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ==================== CHECKLIST ====================
+function addCL(){
+  const t=document.getElementById('cl-text').value.trim();if(!t){toast('Item required');return;}
+  S.checklist.push({id:uid(),text:t,done:false});
+  save();renderCL();closeM('m-cl');document.getElementById('cl-text').value='';
+  toast('Checklist item added ✓');
+}
+function toggleCL(id){const i=S.checklist.find(x=>x.id===id);if(i){i.done=!i.done;save();renderCL();}}
+function delCLitem(id){S.checklist=S.checklist.filter(x=>x.id!==id);save();renderCL();}
+function renderCL(){
+  const el=document.getElementById('cl-items');
+  if(!S.checklist.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No items yet.</div></div>';return;}
+  el.innerHTML=S.checklist.map(x=>`<div class="cl-item"><input type="checkbox" ${x.done?'checked':''} onchange="toggleCL('${x.id}')"/><div class="cl-lbl ${x.done?'done':''}">${x.text}</div><button class="btn btn-danger btn-sm" onclick="delCLitem('${x.id}')">✕</button></div>`).join('');
+  const done=S.checklist.filter(x=>x.done).length;
+  const pct=S.checklist.length?Math.round((done/S.checklist.length)*100):0;
+  document.getElementById('cl-pct').textContent=pct+'% ('+done+'/'+S.checklist.length+')';
+  document.getElementById('cl-bar').style.width=pct+'%';
+}
+
+// ==================== MEETING NOTES ====================
+function saveNote(){
+  const topic=document.getElementById('nt-topic').value.trim();if(!topic){toast('Topic required');return;}
+  const kqRaw=document.getElementById('nt-kq').value.trim();
+  const aiRaw=document.getElementById('nt-ai').value.trim();
+  const note={id:uid(),date:document.getElementById('nt-date').value,topic,attendees:document.getElementById('nt-att').value,decisions:document.getElementById('nt-dec').value,keyQuestions:kqRaw,actionItems:aiRaw,generalNotes:document.getElementById('nt-gen').value};
+  S.notes.push(note);
+
+  // Auto-add key questions to question bank
+  let qAdded=0;
+  if(kqRaw){kqRaw.split('\n').map(l=>l.trim()).filter(Boolean).forEach(q=>{S.questions.push({id:uid(),text:q,context:topic,status:'open',answer:'',date:note.date||today()});qAdded++;});}
+
+  // Auto-add action items to checklist
+  let aAdded=0;
+  if(aiRaw){aiRaw.split('\n').map(l=>l.trim()).filter(Boolean).forEach(a=>{S.checklist.push({id:uid(),text:a+' [from: '+topic+']',done:false});aAdded++;});}
+
+  save();renderNotes();renderQ();renderCL();closeM('m-note');
+  ['nt-topic','nt-att','nt-dec','nt-kq','nt-ai','nt-gen'].forEach(i=>document.getElementById(i).value='');
+  toast(`Note saved · ${qAdded}Q added to bank · ${aAdded} actions to checklist ✓`);
+}
+
+function delNote(id){S.notes=S.notes.filter(x=>x.id!==id);save();renderNotes();document.getElementById('note-detail').innerHTML='';}
+function viewNote(id){
+  const n=S.notes.find(x=>x.id===id);if(!n)return;
+  const kqs=n.keyQuestions?n.keyQuestions.split('\n').filter(Boolean):[];
+  const ais=n.actionItems?n.actionItems.split('\n').filter(Boolean):[];
+  document.getElementById('note-detail').innerHTML=`<div class="card" style="border-color:rgba(212,165,191,.4)">
+    <div class="card-header"><div><span style="font-family:var(--serif);font-size:17px">${n.topic}</span><div style="font-size:11px;color:var(--muted);margin-top:3px">${n.date||''} · ${n.attendees||'—'}</div></div><button class="btn btn-sm" onclick="document.getElementById('note-detail').innerHTML=''">✕</button></div>
+    ${n.decisions?`<div style="margin-bottom:16px"><div class="card-title" style="margin-bottom:6px">Decisions</div><div style="font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.65">${n.decisions}</div></div>`:''}
+    ${kqs.length?`<div style="margin-bottom:16px"><div class="card-title" style="margin-bottom:6px">Key Questions <span class="tag t-blue" style="margin-left:6px">→ Question Bank</span></div><ul style="padding-left:16px">${kqs.map(q=>`<li style="font-size:13px;color:var(--text2);margin-bottom:4px;line-height:1.55">${q}</li>`).join('')}</ul></div>`:''}
+    ${ais.length?`<div style="margin-bottom:16px"><div class="card-title" style="margin-bottom:6px">Action Items <span class="tag t-teal" style="margin-left:6px">→ Checklist</span></div><ul style="padding-left:16px">${ais.map(a=>`<li style="font-size:13px;color:var(--text2);margin-bottom:4px;line-height:1.55">${a}</li>`).join('')}</ul></div>`:''}
+    ${n.generalNotes?`<div><div class="card-title" style="margin-bottom:6px">General Notes</div><div style="font-size:13px;color:var(--text2);white-space:pre-wrap;line-height:1.65">${n.generalNotes}</div></div>`:''}
+  </div>`;
+}
+function renderNotes(){
+  const el=document.getElementById('notes-list');
+  if(!S.notes.length){el.innerHTML='<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">No meeting notes yet. Click "+ New Note" to start.</div></div>';return;}
+  el.innerHTML=[...S.notes].reverse().map(n=>{
+    const kqCount=n.keyQuestions?n.keyQuestions.split('\n').filter(Boolean).length:0;
+    const aiCount=n.actionItems?n.actionItems.split('\n').filter(Boolean).length:0;
+    return`<div class="note-card" onclick="viewNote('${n.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><div style="font-size:11px;color:var(--muted)">${n.date||'No date'} · ${n.attendees||'—'}</div>
+        <div style="font-size:14px;font-weight:600;margin:4px 0">${n.topic}</div>
+        <div style="margin-top:7px">
+          ${kqCount?`<span class="note-badge">❓ ${kqCount} question${kqCount>1?'s':''} → bank</span>`:''}
+          ${aiCount?`<span class="note-badge" style="background:rgba(122,184,196,.1);border-color:rgba(122,184,196,.3);color:#3a7f90">✅ ${aiCount} action${aiCount>1?'s':''} → checklist</span>`:''}
+          ${n.decisions?'<span class="note-badge" style="background:rgba(196,184,216,.15);border-color:rgba(196,184,216,.4);color:#7a6a9a">📌 Decisions</span>':''}
+        </div></div>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delNote('${n.id}')">✕</button>
+      </div></div>`;
+  }).join('');
+}
+
+// ==================== ARCHITECTURE ====================
+async function genArch(){
+  const title=document.getElementById('ar-title').value.trim();
+  const desc=document.getElementById('ar-desc').value.trim();
+  if(!title||!desc){toast('Title and description required');return;}
+  const type=document.getElementById('ar-type').value;
+  closeM('m-arch');nav('arch');
+  const tmpId=uid();
+  const diag={id:tmpId,title,type,desc,svg:'',suggestions:[],date:today()};
+  S.diagrams.push(diag);save();renderArch();
+
+  // show loading in detail
+  document.getElementById('arch-detail').innerHTML=`<div class="card"><div style="font-size:15px;font-weight:600;margin-bottom:14px">${title}</div><div class="ai-loading"><div class="spinner"></div>Generating ${type} diagram…</div></div>`;
+
+  try{
+    const prompt=`You are an expert software/systems architect and business analyst specialising in life sciences informatics (LIMS, ELN, Benchling, SyncoOP, Millipore Merck). 
+
+Generate a professional ${type} diagram as SVG code plus improvement suggestions.
+
+Diagram title: ${title}
+Type: ${type}
+Requirements: ${desc}
+
+Respond with ONLY valid JSON — no markdown, no extra text:
+{
+  "svg": "<svg viewBox='0 0 800 500' xmlns='http://www.w3.org/2000/svg'>…full SVG here…</svg>",
+  "suggestions": ["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+}
+
+SVG requirements:
+- viewBox 0 0 800 500
+- Use these colours: boxes #3a7bbf (blue), text #1e2535, arrows #6baed6, secondary boxes #d4a5bf (pink), accent #7ab8c4 (teal), background #f8f9fd
+- Rounded rectangles (rx=10), clean sans-serif font (font-family: sans-serif)
+- Clear labels on all nodes
+- Arrows with arrowhead markers
+- Professional layout appropriate for the diagram type
+- Include a legend or title text in the SVG`;
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:'You are a system architecture expert. Generate SVG diagrams. Return ONLY valid JSON, no markdown.',
+        messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+    const result=JSON.parse(txt);
+    diag.svg=result.svg||'';diag.suggestions=result.suggestions||[];
+    save();renderArchDetail(diag);renderArch();
+  }catch(e){
+    document.getElementById('arch-detail').innerHTML=`<div class="card"><p style="color:#b04050">Generation failed: ${e.message}</p></div>`;
+    S.diagrams=S.diagrams.filter(x=>x.id!==tmpId);save();renderArch();
+  }
+  ['ar-title','ar-desc'].forEach(i=>document.getElementById(i).value='');
+}
+
+function delDiag(id){S.diagrams=S.diagrams.filter(x=>x.id!==id);save();renderArch();document.getElementById('arch-detail').innerHTML='';}
+function viewDiag(id){const d=S.diagrams.find(x=>x.id===id);if(d)renderArchDetail(d);}
+function renderArchDetail(d){
+  document.getElementById('arch-detail').innerHTML=`<div class="card">
+    <div class="card-header"><div><span style="font-family:var(--serif);font-size:17px">${d.title}</span><div style="margin-top:4px"><span class="tag t-blue">${d.type}</span></div></div><button class="btn btn-sm" onclick="document.getElementById('arch-detail').innerHTML=''">✕</button></div>
+    ${d.svg?`<div class="arch-svg-wrap">${d.svg}</div>`:'<div class="empty"><div class="empty-icon">🏗</div><div class="empty-text">SVG not available.</div></div>'}
+    ${d.suggestions&&d.suggestions.length?`<div class="ai-panel" style="margin-top:16px"><div class="ai-panel-title">💡 Improvement Suggestions</div><ul class="ai-sec">${d.suggestions.map(s=>`<li>${s}</li>`).join('')}</ul></div>`:''}
+  </div>`;
+}
+function renderArch(){
+  const el=document.getElementById('arch-list');
+  if(!S.diagrams.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏗</div><div class="empty-text">No diagrams yet. Click "+ New Diagram" and describe what you need.</div></div>';return;}
+  const tc={system:'blue',process:'teal',data:'pink',integration:'lilac',sequence:'orange'};
+  el.innerHTML=[...S.diagrams].reverse().map(d=>`<div class="item-card" onclick="viewDiag('${d.id}')">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:11px;color:var(--muted)">${d.date}</div><div style="font-size:14px;font-weight:600;margin:4px 0">${d.title}</div><div style="margin-top:6px"><span class="tag t-${tc[d.type]||'blue'}">${d.type}</span>${d.svg?'<span class="tag t-green" style="margin-left:5px">✓ Generated</span>':'<span class="tag t-gray" style="margin-left:5px">Pending</span>'}</div></div>
+      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delDiag('${d.id}')">✕</button>
+    </div></div>`).join('');
+}
+
+// ==================== EOD SUMMARY ====================
+async function genEOD(){
+  const d=document.getElementById('eod-date').value||today();
+  const box=document.getElementById('eod-content');
+  box.innerHTML=`<div class="ai-loading"><div class="spinner"></div>Compiling today's data and generating summary…</div>`;
+
+  const todayKT=S.ktCalls.filter(x=>x.date===d);
+  const todayNotes=S.notes.filter(x=>x.date===d);
+  const openQ=S.questions.filter(x=>x.status==='open');
+  const answeredQ=S.questions.filter(x=>x.status==='answered');
+  const openRisks=S.raid.filter(x=>x.type==='risk'&&x.severity==='high');
+  const clDone=S.checklist.filter(x=>x.done).length;
+  const clTotal=S.checklist.length;
+
+  const prompt=`You are an expert SME/BA working at Excelra on the Millipore Merck / SyncoOP project. Generate a professional End-of-Day summary report for ${d}.
+
+Data from today:
+KT Calls today: ${todayKT.map(x=>x.title).join(', ')||'None'}
+Meeting Notes today: ${todayNotes.map(x=>x.topic).join(', ')||'None'}
+Checklist: ${clDone}/${clTotal} items complete
+Open questions: ${openQ.length} | Answered today: ${answeredQ.length}
+High-risk RAID items: ${openRisks.map(x=>x.desc.substring(0,60)).join('; ')||'None'}
+Recent requirements added: ${S.requirements.slice(-3).map(x=>x.title).join(', ')||'None'}
+Recent notes decisions: ${todayNotes.map(x=>x.decisions).filter(Boolean).join(' | ').substring(0,300)||'None'}
+
+Return ONLY JSON:
+{
+  "headline": "one sentence summary of the day",
+  "accomplished": ["item1","item2","item3"],
+  "keyDecisions": ["decision1","decision2"],
+  "blockers": ["blocker1","blocker2"],
+  "focusTomorrow": ["priority1","priority2","priority3"],
+  "openItemsSummary": "brief summary of outstanding questions and risks"
+}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:'You are a BA/SME assistant. Generate EOD summaries as valid JSON only.',
+        messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    let txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
+    const r=JSON.parse(txt);
+    window._lastEOD={date:d,data:r,stats:{clDone,clTotal,openQ:openQ.length,answeredQ:answeredQ.length,highRisks:openRisks.length}};
+    box.innerHTML=`
+      <div style="background:linear-gradient(135deg,rgba(58,123,191,.1),rgba(212,165,191,.1));border:1px solid rgba(107,174,214,.3);border-radius:12px;padding:18px 22px;margin-bottom:18px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px">Day Summary · ${d}</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text);line-height:1.5">${r.headline}</div>
+      </div>
+      <div class="grid-3" style="margin-bottom:18px">
+        <div class="stat-card s-blue"><div class="stat-num c-blue">${clDone}/${clTotal}</div><div class="stat-lbl">Tasks Done</div></div>
+        <div class="stat-card s-teal"><div class="stat-num c-teal">${answeredQ.length}</div><div class="stat-lbl">Q Answered</div></div>
+        <div class="stat-card s-pink"><div class="stat-num c-pink">${openRisks.length}</div><div class="stat-lbl">Open Risks</div></div>
+      </div>
+      ${r.accomplished&&r.accomplished.length?`<div class="eod-section"><div class="eod-section-title">✅ Accomplished Today</div><ul>${r.accomplished.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      ${r.keyDecisions&&r.keyDecisions.length?`<div class="eod-section" style="border-left-color:var(--pink)"><div class="eod-section-title">📌 Key Decisions</div><ul>${r.keyDecisions.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      ${r.blockers&&r.blockers.length?`<div class="eod-section" style="border-left-color:#c04050;background:rgba(192,64,80,.04)"><div class="eod-section-title" style="color:#c04050">🚧 Blockers & Risks</div><ul>${r.blockers.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      ${r.focusTomorrow&&r.focusTomorrow.length?`<div class="eod-section" style="border-left-color:var(--teal)"><div class="eod-section-title">🎯 Focus for Tomorrow</div><ul>${r.focusTomorrow.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      ${r.openItemsSummary?`<div class="eod-section" style="border-left-color:var(--lilac)"><div class="eod-section-title">📊 Open Items Overview</div><p>${r.openItemsSummary}</p></div>`:''}
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);text-align:right">Generated ${new Date().toLocaleTimeString()}</div>`;
+  }catch(e){
+    box.innerHTML=`<div class="empty"><div class="empty-icon">🌙</div><div class="empty-text">Generation failed: ${e.message}</div></div>`;
+  }
+}
+
+function exportEODpdf(){
+  if(!window._lastEOD){toast('Generate a summary first');return;}
+  const {date,data:r,stats}=window._lastEOD;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({format:'a4',unit:'mm'});
+  const W=210,M=18,cw=W-M*2;
+  let y=0;
+
+  // Header bar
+  doc.setFillColor(58,123,191);doc.rect(0,0,W,28,'F');
+  doc.setFillColor(184,127,160);doc.rect(0,26,W,3,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.text('Excelra SME & BA Workbench',M,11);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text('End of Day Summary Report · '+date,M,19);
+  doc.setTextColor(255,255,255);doc.text('Millipore Merck / SyncoOP',W-M,19,{align:'right'});
+  y=36;
+
+  // Headline
+  doc.setTextColor(30,37,53);doc.setFont('helvetica','italic');doc.setFontSize(11);
+  const hLines=doc.splitTextToSize(r.headline||'',cw);
+  doc.text(hLines,M,y);y+=hLines.length*6+8;
+
+  // Stat boxes
+  const boxes=[['Tasks Done',stats.clDone+'/'+stats.clTotal,[58,123,191]],['Q Answered',stats.answeredQ,[122,184,196]],['Open Risks',stats.highRisks,[192,64,80]]];
+  const bw=(cw-8)/3;
+  boxes.forEach(([lbl,val,clr],i)=>{
+    const bx=M+i*(bw+4);
+    doc.setFillColor(...clr);doc.roundedRect(bx,y,bw,16,3,3,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
+    doc.text(String(val),bx+bw/2,y+9,{align:'center'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text(lbl.toUpperCase(),bx+bw/2,y+14,{align:'center'});
+  });
+  y+=24;
+
+  function section(title,items,clr=[58,123,191]){
+    if(!items||!items.length)return;
+    if(y>260){doc.addPage();y=20;}
+    doc.setFillColor(...clr,30);doc.roundedRect(M,y,cw,7,2,2,'F');
+    doc.setDrawColor(...clr);doc.setLineWidth(.4);doc.line(M,y,M,y+7);
+    doc.setTextColor(...clr);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+    doc.text(title,M+4,y+4.8);y+=11;
+    doc.setTextColor(74,82,112);doc.setFont('helvetica','normal');doc.setFontSize(10);
+    items.forEach(item=>{
+      const lines=doc.splitTextToSize('• '+item,cw-6);
+      if(y+lines.length*5>275){doc.addPage();y=20;}
+      doc.text(lines,M+4,y);y+=lines.length*5+2;
+    });
+    y+=4;
+  }
+
+  section('✅ ACCOMPLISHED TODAY',r.accomplished,[58,123,191]);
+  section('📌 KEY DECISIONS',r.keyDecisions,[184,127,160]);
+  section('🚧 BLOCKERS & RISKS',r.blockers,[192,64,80]);
+  section('🎯 FOCUS FOR TOMORROW',r.focusTomorrow,[122,184,196]);
+  if(r.openItemsSummary){
+    if(y>255){doc.addPage();y=20;}
+    doc.setFillColor(196,184,216,40);doc.roundedRect(M,y,cw,7,2,2,'F');
+    doc.setDrawColor(196,184,216);doc.setLineWidth(.4);doc.line(M,y,M,y+7);
+    doc.setTextColor(122,106,154);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+    doc.text('📊 OPEN ITEMS OVERVIEW',M+4,y+4.8);y+=11;
+    doc.setTextColor(74,82,112);doc.setFont('helvetica','normal');doc.setFontSize(10);
+    const ol=doc.splitTextToSize(r.openItemsSummary,cw-6);doc.text(ol,M+4,y);y+=ol.length*5+8;
+  }
+
+  // Open Qs
+  const openQs=S.questions.filter(x=>x.status==='open').slice(0,8);
+  if(openQs.length){
+    if(y>250){doc.addPage();y=20;}
+    doc.setFillColor(107,174,214,25);doc.roundedRect(M,y,cw,7,2,2,'F');
+    doc.setTextColor(58,123,191);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+    doc.text('❓ OPEN QUESTIONS ('+openQs.length+')',M+4,y+4.8);y+=11;
+    doc.setTextColor(74,82,112);doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+    openQs.forEach(q=>{
+      const lines=doc.splitTextToSize('• '+q.text,cw-6);
+      if(y+lines.length*5>275){doc.addPage();y=20;}
+      doc.text(lines,M+4,y);y+=lines.length*5+2;
+    });y+=4;
+  }
+
+  // Footer on each page
+  const pages=doc.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i);
+    doc.setFillColor(244,246,251);doc.rect(0,285,W,12,'F');
+    doc.setTextColor(138,146,170);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text('Excelra SME & BA Workbench · Confidential',M,291);
+    doc.text('Page '+i+' of '+pages+' · Generated '+new Date().toLocaleString(),W-M,291,{align:'right'});
+  }
+
+  doc.save('Excelra_EOD_'+date+'.pdf');
+  toast('PDF exported ✓');
+}
+
+// ==================== RENDER ALL ====================
+function renderAll(){renderGl();renderKT();renderReq();renderRaid();renderProc();renderQ();renderCL();renderNotes();renderArch();updateStats();updateMeta();}
+
+// Set defaults
+document.getElementById('kt-date').valueAsDate=new Date();
+document.getElementById('nt-date').valueAsDate=new Date();
+document.getElementById('eod-date').valueAsDate=new Date();
+document.getElementById('rd-due').valueAsDate=new Date();
+
+load();
+</script>
+</body>
+</html>
